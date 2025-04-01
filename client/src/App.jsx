@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import LoanList from "./components/LoanList";
+import LoanForm from "./components/LoanForm";
 import Report from "./components/Report";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LoanList />} />
             <Route path="/report" element={<Report />} />
+            <Route path="/add-loan" element={<LoanForm />} />
           </Routes>
         </div>
       </div>

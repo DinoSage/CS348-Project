@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import loanRoutes from "./routes/loans.js";
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -16,12 +17,12 @@ try {
   await mongoose.connect(uri, clientOptions);
   await mongoose.connection.db.admin().command({ ping: 1 });
   console.log("Pinged your deployment. You successfully connected to MongoDB!");
-} finally {
-  // Ensures that the client will close when you finish/error
-  await mongoose.disconnect();
+} catch (err) {
+  console.error("Error connecting to MongoDB:", err);
+  process.exit(1);
 }
 
-//app.use("/loans", loanRoutes);
+app.use("/loans", loanRoutes);
 
 // Start server
 app.listen(PORT, () => {

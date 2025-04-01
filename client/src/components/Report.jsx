@@ -1,55 +1,75 @@
 import React, { useState } from "react";
 
-function Report() {
-  const [filters, setFilters] = useState({ startDate: "", endDate: "" });
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
+const Report = () => {
+  const [bookFilter, setBookFilter] = useState("");
+  const [borrowerFilter, setBorrowerFilter] = useState("");
+  const [filteredLoans, setFilteredLoans] = useState([]);
 
-  const fetchReport = async () => {
-    setLoading(true);
+  const generateReport = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/report?start=${filters.startDate}&end=${filters.endDate}`);
+      const response = await fetch(
+        `http://localhost:5000/loans?book=${bookFilter}&borrower=${borrowerFilter}`
+      );
       const data = await response.json();
-      setReportData(data);
+      setFilteredLoans(data);
     } catch (error) {
       console.error("Error fetching report:", error);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="p-4 bg-white shadow rounded">
-      <h2 className="text-xl font-bold mb-4">Loan Reports</h2>
-
-      <div className="flex space-x-4">
-        <input 
-          type="date" 
-          value={filters.startDate} 
-          onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} 
-          className="border p-2 rounded"
+    <div>
+      <h2 className="text-xl font-bold mb-4">Generate Loan Report</h2>
+      <div className="mb-4">
+        <label className="block text-gray-700">Book Title:</label>
+        <input
+          type="text"
+          value={bookFilter}
+          onChange={(e) => setBookFilter(e.target.value)}
+          className="mt-1 p-2 border rounded-md w-full"
         />
-        <input 
-          type="date" 
-          value={filters.endDate} 
-          onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} 
-          className="border p-2 rounded"
-        />
-        <button onClick={fetchReport} className="bg-blue-500 text-white px-4 py-2 rounded">
-          {loading ? "Loading..." : "Generate Report"}
-        </button>
       </div>
+      <div className="mb-4">
+        <label className="block text-gray-700">Borrower:</label>
+        <input
+          type="text"
+          value={borrowerFilter}
+          onChange={(e) => setBorrowerFilter(e.target.value)}
+          className="mt-1 p-2 border rounded-md w-full"
+        />
+      </div>
+      <button
+        onClick={generateReport}
+        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+      >
+        Generate Report
+      </button>
 
-      {reportData && (
-        <div className="mt-6 p-4 border rounded bg-gray-50">
-          <h3 className="text-lg font-semibold mb-2">Report Summary</h3>
-          <p><strong>Total Loans:</strong> {reportData.totalLoans}</p>
-          <p><strong>Average Loan Duration:</strong> {reportData.avgDuration} days</p>
-          <p><strong>Late Returns:</strong> {reportData.lateReturns}</p>
-          <p><strong>Most Borrowed Book:</strong> {reportData.mostBorrowedBook}</p>
+      {filteredLoans.length > 0 && (
+        <div className="mt-4">
+          <h3 className="font-bold">Report Results</h3>
+          <table className="min-w-full table-auto border-collapse border border-gray-200">
+            <thead>
+              <tr>
+                <th className="border p-2">Book Title</th>
+                <th className="border p-2">Borrower</th>
+                <th className="border p-2">Return Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLoans.map((loan) => (
+                <tr key={loan.id}>
+                  <td className="border p-2">{loan.book}</td>
+                  <td className="border p-2">{loan.borrower}</td>
+                  <td className="border p-2">{loan.returnDate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
-}
+};
 
 export default Report;
