@@ -19,9 +19,8 @@ router.get("/report", async (req, res) => {
   const { startDate, endDate } = req.query;
 
   // Convert to proper date objects
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T23:59:59`);
   try {
     const loans = await Loan.find({
       dueDate: { $gte: start, $lte: end },
@@ -56,11 +55,13 @@ router.post("/", async (req, res) => {
 
     const { bookTitle, borrowerName, dueDate } = req.body;
 
-    // Create a new loan instance
+    // Fix timezone by forcing local noon
+    const fixedDate = new Date(`${dueDate}T12:00:00`);
+
     const newLoan = new Loan({
       bookTitle,
       borrowerName,
-      dueDate,
+      dueDate: fixedDate,
     });
 
     // Save the new loan to the database

@@ -1,19 +1,13 @@
 import React, { useState } from "react";
+import LoanTable from "./LoanTable";
 
 const Report = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch loans within the date range
-  const handleGenerateReport = async () => {
-    if (!startDate || !endDate) {
-      setError("Please select both start and end dates.");
-      return;
-    }
-    setLoading(true);
+  const fetchReport = async () => {
     setError(null);
     try {
       const response = await fetch(
@@ -23,18 +17,49 @@ const Report = () => {
       if (response.ok) {
         setReportData(data);
       } else {
-        throw new Error("Failed to fetch report data");
+        throw new Error("Failed to fetch report");
       }
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const fetchOverdueLoans = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/loans");
+      const data = await response.json();
+      if (response.ok) {
+        const now = new Date();
+        const overdue = data.filter(
+          (loan) => new Date(loan.dueDate) < now
+        );
+        setReportData(overdue);
+      } else {
+        throw new Error("Failed to fetch loans");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`http://localhost:5000/loans/${id}`, { method: "DELETE" });
+    setReportData(reportData.filter((loan) => loan._id !== id));
+  };
+
+  const handleExtend = async (id, newDate) => {
+    await fetch(`http://localhost:5000/loans/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dueDate: `${newDate}T12:00:00` }),
+    });
+    fetchReport(); // Or refetch overdue if that was last clicked
   };
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Generate Loan Report</h2>
+      <h2 className="text-2xl font-bold mb-4">Generate Report</h2>
+
       <div className="mb-4">
         <label className="block mb-2">Start Date:</label>
         <input
@@ -53,39 +78,29 @@ const Report = () => {
           className="p-2 border border-gray-300 rounded"
         />
       </div>
+
       <button
-        onClick={handleGenerateReport}
-        className="bg-blue-500 text-white p-2 rounded"
+        onClick={fetchReport}
+        className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
       >
         Generate Report
       </button>
+      <button
+        onClick={fetchOverdueLoans}
+        className="bg-red-500 text-white px-4 py-2 rounded"
+      >
+        Show Outstanding Loans
+      </button>
 
-      {loading && <div>Loading...</div>}
-      {error && <div className="text-red-500 mt-4">{error}</div>}
+      {error && <div className="text-red-600 mt-4">{error}</div>}
 
       {reportData.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-4">Loan Report</h3>
-          <table className="min-w-full table-auto border-collapse">
-            <thead>
-              <tr>
-                <th className="border-b p-2">Book Title</th>
-                <th className="border-b p-2">Borrower</th>
-                <th className="border-b p-2">Due Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.map((loan) => (
-                <tr key={loan._id}>
-                  <td className="border-b p-2">{loan.bookTitle}</td>
-                  <td className="border-b p-2">{loan.borrowerName}</td>
-                  <td className="border-b p-2">
-                    {new Date(loan.dueDate).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <LoanTable
+            loans={reportData}
+            onDelete={handleDelete}
+            onExtend={handleExtend}
+          />
         </div>
       )}
     </div>
