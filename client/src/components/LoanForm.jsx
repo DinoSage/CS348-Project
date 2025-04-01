@@ -6,19 +6,36 @@ function LoanForm({ setLoans }) {
     borrowerName: "",
     dueDate: "",
   });
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage(""); // Clear previous errors
 
-    fetch("http://localhost:5050/loans", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    })
-      .then((res) => res.json())
-      .then((newLoan) => setLoans((prev) => [...prev, newLoan]));
+    try {
+      const response = await fetch("http://localhost:5000/loans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    setFormData({ bookTitle: "", borrowerName: "", dueDate: "" }); // Reset form after submission
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === "Book is already loaned") {
+          setErrorMessage("This book is already loaned out. Please choose another book.");
+        } else {
+          setErrorMessage("Failed to add loan. Please try again.");
+        }
+        return;
+      }
+
+      setLoans((prev) => [...prev, data]); // Add new loan to state
+      setFormData({ bookTitle: "", borrowerName: "", dueDate: "" }); // Reset form
+    } catch (error) {
+      console.error("Error adding loan:", error);
+      setErrorMessage("An error occurred. Please check your connection and try again.");
+    }
   };
 
   return (
@@ -58,6 +75,8 @@ function LoanForm({ setLoans }) {
           className="border p-2 rounded w-full"
         />
       </div>
+
+      {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
 
       <button type="submit" className="bg-blue-500 text-white p-2 rounded mt-2">
         Add Loan
