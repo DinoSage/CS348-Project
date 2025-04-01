@@ -15,6 +15,25 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/report", async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  // Convert to proper date objects
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  try {
+    const loans = await Loan.find({
+      dueDate: { $gte: start, $lte: end },
+    });
+
+    res.json(loans);
+  } catch (err) {
+    console.error("Error fetching report data:", err);
+    res.status(500).json({ message: "Error fetching report data" });
+  }
+});
+
 // Get a single loan by ID
 router.get("/:id", async (req, res) => {
   try {
