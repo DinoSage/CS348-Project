@@ -11,13 +11,13 @@ const Report = () => {
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5000/loans/report?startDate=${startDate}&endDate=${endDate}`
+        `http://localhost:5000/loans/raw-report?startDate=${startDate}&endDate=${endDate}`
       );
       const data = await response.json();
       if (response.ok) {
         setReportData(data);
       } else {
-        throw new Error("Failed to fetch report");
+        throw new Error(data.message || "Failed to fetch raw report");
       }
     } catch (err) {
       setError(err.message);
@@ -26,7 +26,10 @@ const Report = () => {
 
   const fetchOverdueLoans = async () => {
     try {
-      const response = await fetch("http://localhost:5000/loans");
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const response = await fetch(
+        `http://localhost:5000/loans/raw-report?startDate=2000-01-01&endDate=${today}`
+      );
       const data = await response.json();
       if (response.ok) {
         const now = new Date();
@@ -35,7 +38,7 @@ const Report = () => {
         );
         setReportData(overdue);
       } else {
-        throw new Error("Failed to fetch loans");
+        throw new Error(data.message || "Failed to fetch overdue loans");
       }
     } catch (err) {
       setError(err.message);

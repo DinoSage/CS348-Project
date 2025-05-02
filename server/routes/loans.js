@@ -33,6 +33,28 @@ router.get("/report", async (req, res) => {
   }
 });
 
+// New Report based on dates
+router.get("/raw-report", async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  try {
+    const db = mongoose.connection.db;
+    const collection = db.collection("loans");
+
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T23:59:59`);
+
+    const results = await collection.find({
+      dueDate: { $gte: start, $lte: end }
+    }).toArray();
+
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Error with raw-report:", err);
+    res.status(500).json({ error: "Raw report query failed", message: err.message });
+  }
+});
+
 // Get a single loan by ID
 router.get("/:id", async (req, res) => {
   try {
