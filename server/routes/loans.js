@@ -1,6 +1,6 @@
 import express from "express";
 import Loan from "../models/Loan.js";
-import mongoose from "mongoose"; // Import mongoose for connection checks
+import mongoose, { mongo } from "mongoose"; // Import mongoose for connection checks
 
 const router = express.Router();
 
@@ -39,12 +39,10 @@ router.get("/raw-report", async (req, res) => {
 
   try {
     const db = mongoose.connection.db;
-    const collection = db.collection("loans");
-
     const start = new Date(`${startDate}T00:00:00`);
     const end = new Date(`${endDate}T23:59:59`);
 
-    const results = await collection.find({
+    const results = await db.collection("loans").find({
       dueDate: { $gte: start, $lte: end }
     }).toArray();
 

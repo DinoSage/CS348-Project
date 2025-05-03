@@ -6,6 +6,7 @@ const LoanSchema = new mongoose.Schema({
   dueDate: { type: Date, required: true },
 }, { timestamps: true });
 
+LoanSchema.index({ dueDate: 1}); // schema level
 const Loan = mongoose.model("Loan", LoanSchema);
 
 export default Loan;
